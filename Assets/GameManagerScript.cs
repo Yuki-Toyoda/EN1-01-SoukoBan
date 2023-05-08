@@ -8,6 +8,10 @@ public class GameManagerScript : MonoBehaviour
     // プレイヤーのゲームオブジェクト読み込み
     public GameObject playerPrefab;
     public GameObject boxPreafab;
+    public GameObject GoalPreafab;
+
+    // クリア時のテキスト
+    public GameObject clearText;
 
 	// 配列の要素
 	int[,] map; // レベルデザイン用
@@ -27,7 +31,7 @@ public class GameManagerScript : MonoBehaviour
         map = new int[,] {
         {0, 0, 0, 0, 0 },
         {0, 2, 1, 2, 0 },
-        {0, 0, 0, 0, 0 }
+        {0, 3, 0, 0, 3 }
         };
 
         field = new GameObject
@@ -57,6 +61,15 @@ public class GameManagerScript : MonoBehaviour
                         new Vector3(x, map.GetLength(0) - y, 0),
                         Quaternion.identity
                         );
+                }
+                else if (map[y, x] == 3)
+                {
+                    Instantiate(
+                        GoalPreafab,
+                        new Vector3(x, map.GetLength(0) - y, 1),
+                        Quaternion.identity
+                        );
+
                 }
             }
         }
@@ -94,6 +107,19 @@ public class GameManagerScript : MonoBehaviour
 		{
             MoveNumber(playerPrefab.tag, playerIndex, new Vector2Int(playerIndex.x - 1, playerIndex.y));
         }
+
+        if(IsCleared())
+        {
+            // クリア時のテキストをアクティブ
+            clearText.SetActive(true);
+
+        }
+        else
+        {
+            // クリアしていないときは非アクティブ
+            clearText.SetActive(false);
+        }
+
 	}
 
     /// <summary>
@@ -157,6 +183,50 @@ public class GameManagerScript : MonoBehaviour
 
         field[moveTo.y, moveTo.x] = field[moveFrom.y, moveFrom.x];
         field[moveFrom.y, moveFrom.x] = null;
+        return true;
+
+    }
+
+
+    /// <summary>
+    /// クリア判定関数
+    /// </summary>
+    /// <returns>クリアしているかどうか</returns>
+    bool IsCleared()
+    {
+        // Vector2Int型の可変配列の作成
+        List<Vector2Int> goals = new List<Vector2Int>();
+
+        // ゴールのマスを探す
+        for(int y = 0; y < map.GetLength(0); y++)
+        {
+            for(int x = 0; x < map.GetLength(1); x++)
+            {
+
+                // 格納場所かを判断する
+                if (map[y, x] == 3)
+                {
+                    // 格納場所のインデックスを控える
+                    goals.Add(new Vector2Int(x, y));
+                }
+
+            }
+        }
+
+        // 全てのゴールと箱が重なっているかを見る
+        for(int i = 0; i < goals.Count; i++)
+        {
+            // fieldを格納
+            GameObject f = field[goals[i].y, goals[i].x];
+            if(f == null || f.tag != "Box")
+            {
+                // 条件に一致している者がなければゲームを続ける
+                return false;
+            }
+
+        }
+
+        // 条件達成ならゲームクリア
         return true;
 
     }
