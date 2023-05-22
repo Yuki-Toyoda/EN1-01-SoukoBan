@@ -14,6 +14,8 @@ public class GameManagerScript : MonoBehaviour
 
     // クリア時のテキスト
     public GameObject clearText;
+    // 操作方法のテキスト
+    public GameObject operationMethodText;
 
 	// 配列の要素
 	int[,] map; // レベルデザイン用
@@ -38,11 +40,11 @@ public class GameManagerScript : MonoBehaviour
         // 配列の実体の作成と初期化
         map = new int[,] {
         {4, 4, 4, 4, 4, 4, 4, 4 },
-        {4, 4, 0, 0, 0, 0 ,4, 4 },
-        {4, 4, 2, 1, 0, 2, 4, 4 },
-        {4, 4, 0, 0, 4, 0, 4, 4 },
+        {4, 4, 0, 0, 0, 0 ,0, 4 },
+        {4, 4, 2, 1, 0, 2, 0, 4 },
+        {4, 4, 0, 0, 4, 0, 0, 4 },
         {4, 4, 0, 0, 0, 0, 4, 4 },
-        {4, 3, 0, 2, 0, 0, 4, 4 },
+        {4, 3, 0, 2, 0, 4, 4, 4 },
         {4, 4, 4, 0, 0, 3, 3, 4 },
         {4, 4, 4, 4, 4, 4, 4, 4 }
         };
@@ -190,12 +192,16 @@ public class GameManagerScript : MonoBehaviour
             {
                 // クリア時のテキストをアクティブ
                 clearText.SetActive(true);
+                // 操作方法のテキストを非アクティブ
+                operationMethodText.SetActive(false);
 
             }
             else
             {
                 // クリアしていないときは非アクティブ
                 clearText.SetActive(false);
+                // 操作方法のテキストをアクティブ
+                operationMethodText.SetActive(true);
             }
         }
 
@@ -297,12 +303,13 @@ public class GameManagerScript : MonoBehaviour
         }
 
         // 全てのゴールと箱が重なっているかを見る
-        for(int i = 0; i < goals.Count; i++)
+        for (int i = 0; i < goals.Count; i++)
         {
             // fieldを格納
             GameObject f = field[goals[i].y, goals[i].x];
             if(f == null || f.tag != "Box")
             {
+
                 // 条件に一致している者がなければゲームを続ける
                 return false;
             }
