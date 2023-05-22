@@ -8,7 +8,9 @@ public class GameManagerScript : MonoBehaviour
     // プレイヤーのゲームオブジェクト読み込み
     public GameObject playerPrefab;
     public GameObject boxPreafab;
-    public GameObject GoalPreafab;
+    public GameObject goalPreafab;
+    public GameObject backGroundPrefab;
+    public GameObject wallPrefab;
 
     // クリア時のテキスト
     public GameObject clearText;
@@ -23,15 +25,26 @@ public class GameManagerScript : MonoBehaviour
     // 文字列の宣言と初期化
     string debugText = "";
 
+    // ゴールしたか
+    bool isGoaled = false;
+
     // Start is called before the first frame update
     void Start()
 	{
 
+        // ウィンドウサイズ設定
+        Screen.SetResolution(1920, 1080, false);
+
         // 配列の実体の作成と初期化
         map = new int[,] {
-        {0, 0, 0, 0, 0 },
-        {0, 2, 1, 2, 0 },
-        {0, 3, 0, 0, 3 }
+        {4, 4, 4, 4, 4, 4, 4, 4 },
+        {4, 4, 0, 0, 0, 0 ,4, 4 },
+        {4, 4, 2, 1, 0, 2, 4, 4 },
+        {4, 4, 0, 0, 4, 0, 4, 4 },
+        {4, 4, 0, 0, 0, 0, 4, 4 },
+        {4, 3, 0, 2, 0, 0, 4, 4 },
+        {4, 4, 4, 0, 0, 3, 3, 4 },
+        {4, 4, 4, 4, 4, 4, 4, 4 }
         };
 
         field = new GameObject
@@ -44,6 +57,13 @@ public class GameManagerScript : MonoBehaviour
         {
             for(int x = 0; x<map.GetLength(1); x++)
             {
+                // 背景のインスタンスを作成
+                Instantiate(
+                    backGroundPrefab,
+                    new Vector3(x, map.GetLength(0) - y, 1.0f),
+                    Quaternion.identity
+                    );
+
                 if (map[y, x] == 1)
                 {
                     // プレイヤーのインスタンスを作成
@@ -65,11 +85,20 @@ public class GameManagerScript : MonoBehaviour
                 else if (map[y, x] == 3)
                 {
                     Instantiate(
-                        GoalPreafab,
-                        new Vector3(x, map.GetLength(0) - y, 1),
+                        goalPreafab,
+                        new Vector3(x, map.GetLength(0) - y, 0.1f),
                         Quaternion.identity
                         );
 
+                }
+                else if (map[y, x] == 4)
+                {
+                    // 壁のインスタンスの作成
+                    field[y, x] = Instantiate(
+                        wallPrefab,
+                        new Vector3(x, map.GetLength(0) - y, 0),
+                        Quaternion.identity
+                        );
                 }
             }
         }
@@ -83,41 +112,91 @@ public class GameManagerScript : MonoBehaviour
 	void Update()
 	{
 
+        if(Input.GetKeyDown(KeyCode.R)) {
+
+            for (int y = 0; y < map.GetLength(0); y++)
+            {
+                for (int x = 0; x < map.GetLength(1); x++)
+                {
+                    Destroy(field[y, x]);
+                }
+            }
+
+            for (int y = 0; y < map.GetLength(0); y++)
+            {
+                for (int x = 0; x < map.GetLength(1); x++)
+                {
+
+                    if (map[y, x] == 1)
+                    {
+                        // プレイヤーのインスタンスを作成
+                        field[y, x] = Instantiate(
+                            playerPrefab,
+                            new Vector3(x, map.GetLength(0) - y, 0),
+                            Quaternion.identity
+                            );
+                    }
+                    else if (map[y, x] == 2)
+                    {
+                        // ボックスのインスタンスの作成
+                        field[y, x] = Instantiate(
+                            boxPreafab,
+                            new Vector3(x, map.GetLength(0) - y, 0),
+                            Quaternion.identity
+                            );
+                    }
+                    else if (map[y, x] == 4)
+                    {
+                        // 壁のインスタンスの作成
+                        field[y, x] = Instantiate(
+                            wallPrefab,
+                            new Vector3(x, map.GetLength(0) - y, 0),
+                            Quaternion.identity
+                            );
+                    }
+                }
+            }
+
+        }
+
         // プレイヤーの座標取得
         playerIndex = GetPlayerIndex();
 
-        // プレイヤーの移動処理
-        // 上下
-        if (Input.GetKeyDown(KeyCode.UpArrow))
+        if (!IsCleared())
         {
-            MoveNumber(playerPrefab.tag, playerIndex, new Vector2Int(playerIndex.x, playerIndex.y - 1));
-        }
-        if (Input.GetKeyDown(KeyCode.DownArrow))
-        {
-            MoveNumber(playerPrefab.tag, playerIndex, new Vector2Int(playerIndex.x, playerIndex.y + 1));
+            // プレイヤーの移動処理
+            // 上下
+            if (Input.GetKeyDown(KeyCode.UpArrow))
+            {
+                MoveNumber(playerPrefab.tag, playerIndex, new Vector2Int(playerIndex.x, playerIndex.y - 1));
+            }
+            if (Input.GetKeyDown(KeyCode.DownArrow))
+            {
+                MoveNumber(playerPrefab.tag, playerIndex, new Vector2Int(playerIndex.x, playerIndex.y + 1));
 
-        }
+            }
 
-        // 左右
-        if (Input.GetKeyDown(KeyCode.RightArrow))
-		{
-            MoveNumber(playerPrefab.tag, playerIndex,new Vector2Int(playerIndex.x + 1, playerIndex.y));
-		}
-		if(Input.GetKeyDown(KeyCode.LeftArrow)) 
-		{
-            MoveNumber(playerPrefab.tag, playerIndex, new Vector2Int(playerIndex.x - 1, playerIndex.y));
-        }
+            // 左右
+            if (Input.GetKeyDown(KeyCode.RightArrow))
+            {
+                MoveNumber(playerPrefab.tag, playerIndex, new Vector2Int(playerIndex.x + 1, playerIndex.y));
+            }
+            if (Input.GetKeyDown(KeyCode.LeftArrow))
+            {
+                MoveNumber(playerPrefab.tag, playerIndex, new Vector2Int(playerIndex.x - 1, playerIndex.y));
+            }
 
-        if(IsCleared())
-        {
-            // クリア時のテキストをアクティブ
-            clearText.SetActive(true);
+            if (IsCleared())
+            {
+                // クリア時のテキストをアクティブ
+                clearText.SetActive(true);
 
-        }
-        else
-        {
-            // クリアしていないときは非アクティブ
-            clearText.SetActive(false);
+            }
+            else
+            {
+                // クリアしていないときは非アクティブ
+                clearText.SetActive(false);
+            }
         }
 
 	}
@@ -177,6 +256,10 @@ public class GameManagerScript : MonoBehaviour
             Vector2Int velocity = moveTo - moveFrom;
             bool success = MoveNumber(tag, moveTo, moveTo + velocity);
             if(!success) { return false; }
+        }
+        if(field[moveTo.y, moveTo.x] != null && field[moveTo.y, moveTo.x].tag == "Wall")
+        {
+            return false;
         }
 
         field[moveFrom.y, moveFrom.x].transform.position = new Vector3(moveTo.x, field.GetLength(0) - moveTo.y, 0);
